@@ -1,5 +1,6 @@
 package com.example;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -9,6 +10,11 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator;
 
 import java.io.IOException;
@@ -132,5 +138,19 @@ public class CreateTransactionHandler implements HttpHandler {
         OutputStream os = exchange.getResponseBody();
         os.write(msg.getBytes(StandardCharsets.UTF_8));
         os.close();
+    }
+
+    public record TransactionRequest(@NotNull @Min(0) @JsonProperty("valor") Integer amount, @NotNull @Pattern(regexp = "[c|d]") @JsonProperty("tipo") String type,
+                                     @NotBlank @Length(max = 10) @JsonProperty("descricao") String description) {
+    }
+
+    public record TransactionResponse(@JsonProperty("limite") Integer creditLimit, @JsonProperty("saldo") Integer balance) {
+    }
+
+    public record AccountTransactionsResponse(@JsonProperty("saldo") Balance balance, @JsonProperty("ultimas_transacoes") List<Transaction> lastTransactions) {
+    }
+
+    public record Balance(Integer total, @JsonProperty("data_extrato") Instant instant,
+                          @JsonProperty("limite") Integer creditLimit) {
     }
 }

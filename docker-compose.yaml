@@ -8,12 +8,13 @@ services:
       - CASSANDRA_PORT=9042
       - CASSANDRA_HOST=cassandra
       - CASSANDRA_DC=datacenter1
+      - ENABLE_VIRTUAL_THREADS=true
     depends_on:
       - cassandra
     deploy:
       resources:
         limits:
-          cpus: "0.4"
+          cpus: "0.5"
           memory: "60MB"
 
   api02:
@@ -24,13 +25,14 @@ services:
       - CASSANDRA_PORT=9042
       - CASSANDRA_HOST=cassandra
       - CASSANDRA_DC=datacenter1
+      - ENABLE_VIRTUAL_THREADS=true
 
   cassandra:
     image: 'cassandra:3.11.16'#2.1.20
     container_name: rinha_cassandra
     environment:
       - 'HEAP_NEWSIZE=128M'
-      - 'MAX_HEAP_SIZE=350M'
+      - 'MAX_HEAP_SIZE=400M'
     volumes:
       - ./db-init.sh:/db-init.sh
       - ./src/main/resources/schema.cql:/tmp/schema.cql
@@ -40,8 +42,21 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: "350MB"
+          cpus: "0.4"
+          memory: "400MB"
+
+  haproxy:
+    image: haproxy
+    container_name: haproxy
+    ports:
+      - "9999:9999"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: "20MB"
 
   nginx:
     image: nginx:latest
