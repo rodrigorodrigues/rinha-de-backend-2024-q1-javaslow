@@ -19,6 +19,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.8</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.datastax.oss</groupId>
             <artifactId>java-driver-core</artifactId>
             <version>4.17.0</version>
@@ -204,7 +210,7 @@
                         <configuration>
                             <fallback>false</fallback>
                             <buildArgs>
-                                <arg>-H:DashboardDump=fortune -H:+DashboardAll</arg>
+                                <arg>-H:DashboardDump=rinha-backend2024-q1-javaslow -H:+DashboardAll</arg>
                             </buildArgs>
                             <agent>
                                 <enabled>true</enabled>

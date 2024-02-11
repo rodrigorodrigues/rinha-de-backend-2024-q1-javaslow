@@ -1,12 +1,13 @@
 package com.example;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.logging.Logger;
 
 public class CassandraConnector {
-    private static final Logger log = Logger.getLogger(CassandraConnector.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(CassandraConnector.class.getName());
     private static final CassandraConnector INSTANCE = new CassandraConnector();
     private CqlSession session;
 

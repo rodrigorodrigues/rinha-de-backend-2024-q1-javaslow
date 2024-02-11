@@ -16,6 +16,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -24,12 +26,10 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class CreateTransactionHandler implements HttpHandler {
 
-    private final Logger log = Logger.getLogger(CreateTransactionHandler.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(CreateTransactionHandler.class.getName());
 
     private final ValidatorFactory factory = Validation.byDefaultProvider()
             .configure()
@@ -89,7 +89,7 @@ public class CreateTransactionHandler implements HttpHandler {
                 throw new IllegalStateException("Resource not available!");
             }
         } catch (Exception e) {
-            log.log(Level.SEVERE, String.format("Unexpected error = %s", e.getLocalizedMessage()), e);
+            log.error(String.format("Unexpected error = %s", e.getLocalizedMessage()), e);
             response(exchange, HttpURLConnection.HTTP_INTERNAL_ERROR, String.format("Unexpected error: %s", e.getLocalizedMessage()));
         }
     }
@@ -117,7 +117,7 @@ public class CreateTransactionHandler implements HttpHandler {
         } else {
             balance -= transactionRequest.amount();
             if (account.creditLimit() + balance < 0) {
-                log.log(Level.WARNING, "Balance is lower than allowed");
+                log.warn("Balance is lower than allowed");
                 response(exchange, 422, "Balance is lower than allowed");
                 return;
             }
@@ -132,7 +132,7 @@ public class CreateTransactionHandler implements HttpHandler {
 
     private void response(HttpExchange exchange, int statusCode, String msg) throws IOException {
         if (statusCode != 200) {
-            log.log(Level.WARNING, "status = {0}={1} ", new Object[]{statusCode, msg});
+            log.warn(String.format( "status = {%s}={%s} ", statusCode, msg));
         }
         exchange.sendResponseHeaders(statusCode, msg.length());
         OutputStream os = exchange.getResponseBody();

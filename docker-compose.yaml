@@ -39,6 +39,8 @@ services:
     command: "sh /db-init.sh"
     healthcheck:
       test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
+    ports:
+      - '9042:9042'
     deploy:
       resources:
         limits:
@@ -51,7 +53,8 @@ services:
     ports:
       - "9999:9999"
     volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy
+      - ./haproxy:/haproxy-override
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
     deploy:
       resources:
         limits:
