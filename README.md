@@ -2,7 +2,7 @@
 
 ### Stack
 
-* Java 21 no **Framework**
+* Java 21 no ** MVC Framework**
 * GraalVM
 * Cassandra
 
@@ -21,4 +21,4 @@ docker build -t rinha-de-backend-2024-q1-javaslow .
 
 ### Run locally
 
-`SERVER_PORT=9999 CASSANDRA_PORT=9042 CASSANDRA_HOST=localhost CASSANDRA_DC=datacenter1 ./target/rinha-backend2024-q1-javaslow`
+`SERVER_PORT=9999 CASSANDRA_PORT=9042 CASSANDRA_HOST=localhost CASSANDRA_DC=datacenter1 ENABLE_VIRTUAL_THREADS=true ./target/rinha-backend2024-q1-javaslow`
