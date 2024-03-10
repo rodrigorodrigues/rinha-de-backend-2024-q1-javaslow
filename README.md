@@ -6,18 +6,29 @@
 * GraalVM
 * Cassandra
 
-### Installation with GraalVM
+### GraalVM Instrumented
 
 ```
-mvn clean package -Pnative
+mvn clean package -Pnative-instrumented
+```
 
+### GraalVM Optimized
+
+```
+mvn clean package -Pnative-optimized
+```
+
+### Docker Image
+
+```
 docker build -t rinha-de-backend-2024-q1-javaslow .
 ```
 
-### Installation without GraalVM
+### Docker Compose
 
-`mvn clean package jib:dockerBuild`
-
+```
+docker-compose up -d
+```
 
 ### Run locally
 
