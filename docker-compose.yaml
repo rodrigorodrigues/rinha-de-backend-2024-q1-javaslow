@@ -10,6 +10,13 @@ services:
       - CASSANDRA_DC=datacenter1
     depends_on:
       - cassandra
+    restart: on-failure
+    healthcheck:
+      test: "curl --fail --silent localhost:8080/healthcheck | grep true || exit 1"
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 2s
     deploy:
       resources:
         limits:
@@ -29,7 +36,7 @@ services:
     volumes:
       - ./db-init.sh:/db-init.sh
       - ./src/main/resources/schema.cql:/tmp/schema.cql
-      - ./cassandra.yaml:/etc/cassandra/cassandra.yaml
+#      - ./cassandra.yaml:/etc/cassandra/cassandra.yaml
     command: "sh /db-init.sh"
     healthcheck:
       test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]

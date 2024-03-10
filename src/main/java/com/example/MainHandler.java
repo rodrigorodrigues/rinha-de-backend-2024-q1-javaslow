@@ -69,6 +69,7 @@ public class MainHandler implements HttpHandler {
 
                 var json = new AccountTransactionsResponse(new Balance(total, Instant.now(), creditLimit), transactions).toString();
 
+                //System.out.printf("Retrieved:accountId: %s \tresponse: %s\n", accountId, json);
                 exchange.getResponseHeaders().add("Content-type", "application/json");
                 response(exchange, HttpURLConnection.HTTP_OK, json);
 
@@ -106,7 +107,7 @@ public class MainHandler implements HttpHandler {
             }
             String json = sb.toString();
             if (!json.startsWith("{") || !json.endsWith("}")) {
-                System.out.printf("invalidJson: Invalid data: %s\n", json);
+                //System.out.printf("invalidJson: Invalid data: %s\n", json);
                 return null;
             }
             String[] tokens = removeQuotes.matcher(json.substring(1, json.length() - 1))
@@ -118,25 +119,27 @@ public class MainHandler implements HttpHandler {
             for (String token : tokens) {
                 token = token.trim();
                 if (!token.startsWith("valor") && !token.startsWith("tipo") && !token.startsWith("descricao")) {
-                    System.out.printf("invalidName: Invalid data: %s\n", json);
+                    //System.out.printf("invalidName: Invalid data: %s\n", json);
                     return null;
                 }
                 String[] split = token.split(":");
                 if (split.length != 2) {
-                    System.out.printf("invalidSyntax:Invalid data: %s\n", json);
+                    //System.out.printf("invalidSyntax:Invalid data: %s\n", json);
                     return null;
                 }
                 String key = split[0].trim();
                 String value = split[1].trim();
-                if (key.equals("valor")) {
+                if (key.equals("null") || value.equals("null")) {
+                    return null;
+                } else if (key.equals("valor")) {
                     try {
                         amount = Integer.parseInt(value);
                         if (amount < 0) {
-                            System.out.printf("invalidAmount: Invalid data: %s\n", json);
+                            //System.out.printf("invalidAmount: Invalid data: %s\n", json);
                             return null;
                         }
                     } catch (NumberFormatException nfe) {
-                        System.out.printf("numberFormat: Invalid data: %s\n", json);
+                        //System.out.printf("numberFormat: Invalid data: %s\n", json);
                         return null;
                     }
                 } else if (key.equals("tipo") && pattern.matcher(value).matches()) {
@@ -144,9 +147,17 @@ public class MainHandler implements HttpHandler {
                 } else if (key.equals("descricao") && value.length() <= 10) {
                     description = value;
                 } else {
-                    System.out.printf("noelse: Invalid data: %s\n", json);
+                    //System.out.printf("noelse: Invalid data: %s\n", json);
                     return null;
                 }
+
+                if (amount > 0 && type != null && description != null) {
+                    break;
+                }
+            }
+
+            if (amount == 0 || type == null || description == null) {
+                return null;
             }
 
             return new TransactionRequest(amount, type, description);
@@ -169,6 +180,7 @@ public class MainHandler implements HttpHandler {
             mainRepository.updateBalance(amount, accountId);
             mainRepository.saveTransaction(new Transaction(accountId, transactionRequest.type(), transactionRequest.description(), Instant.now(), transactionRequest.amount()));
             var json = new TransactionResponse(creditLimit, total + amount).toString();
+            //System.out.printf("Created:accountId: %s \tresponse: %s\trequest: %s\n", accountId, json, transactionRequest);
             exchange.getResponseHeaders().add("Content-type", "application/json");
             response(exchange, HttpURLConnection.HTTP_OK, json);
         } catch (IOException ioe) {
@@ -177,9 +189,6 @@ public class MainHandler implements HttpHandler {
     }
 
     private void response(HttpExchange exchange, int statusCode, String msg) throws IOException {
-        if (statusCode != 200) {
-            System.out.printf("Error: statusCode: %s\tmsg: %s%n", statusCode, msg);
-        }
         exchange.sendResponseHeaders(statusCode, msg.length());
         OutputStream os = exchange.getResponseBody();
         os.write(msg.getBytes(StandardCharsets.UTF_8));

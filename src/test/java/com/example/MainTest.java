@@ -63,6 +63,15 @@ class MainTest {
 
         given()
                 .contentType(ContentType.JSON)
+                .body("{\"valor\": 10, \"tipo\": \"c\", \"descricao\": null}")
+                .when()
+                .post("http://localhost:8080/clientes/3/transacoes")
+                .then()
+                .statusCode(422)
+                .log().all();
+
+        given()
+                .contentType(ContentType.JSON)
                 .body("{\"valor\": 500001, \"tipo\": \"d\", \"descricao\": \"danada\"}")
                 .when()
                 .post("http://localhost:8080/clientes/5/transacoes")
