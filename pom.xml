@@ -57,6 +57,32 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <from>
+                        <image>openjdk:21-jdk-slim</image>
+                    </from>
+                    <to>
+                        <image>${project.artifactId}</image>
+                    </to>
+                    <container>
+                        <jvmFlags>
+                            <jvmFlag>-Xmx512m</jvmFlag>
+                            <jvmFlag>-Dfile.encoding=UTF-8</jvmFlag>
+                            <jvmFlag>-XX:+UseG1GC</jvmFlag>
+                            <jvmFlag>-verbose:gc</jvmFlag>
+                            <jvmFlag>--enable-preview</jvmFlag>
+                            <jvmFlag>-XX:+PrintGCDetails</jvmFlag>
+                            <jvmFlag>-Xloggc:/var/log/gc.log</jvmFlag>
+                            <jvmFlag>-Djava.security.egd=file:/dev/./urandom</jvmFlag>
+                        </jvmFlags>
+                        <mainClass>com.example.Main</mainClass>
+                    </container>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
@@ -156,6 +182,7 @@
         </plugins>
     </build>
 
+    <!--
     <profiles>
         <profile>
             <id>native-instrumented</id>
@@ -177,7 +204,7 @@
                         </executions>
                         <configuration>
                             <buildArgs>
-                                <buildArg>--pgo-instrument</buildArg>
+                                <buildArg>..pgo-instrument</buildArg>
                             </buildArgs>
                         </configuration>
                     </plugin>
@@ -205,8 +232,8 @@
                         </executions>
                         <configuration>
                             <buildArgs>
-                                <buildArg>--gc=G1</buildArg>
-                                <buildArg>--pgo=default.iprof</buildArg>
+                                <buildArg>..gc=G1</buildArg>
+                                <buildArg>..pgo=default.iprof</buildArg>
                                 <buildArg>-march=native</buildArg>
                             </buildArgs>
                         </configuration>
@@ -215,5 +242,6 @@
             </build>
         </profile>
     </profiles>
+    -->
 
 </project>

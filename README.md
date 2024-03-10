@@ -18,6 +18,11 @@ mvn clean package -Pnative-instrumented
 mvn clean package -Pnative-optimized
 ```
 
+### Installation without GraalVM
+
+`mvn clean package jib:dockerBuild`
+
+
 ### Docker Image
 
 ```
