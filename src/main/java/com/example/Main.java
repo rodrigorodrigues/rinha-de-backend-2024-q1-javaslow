@@ -1,7 +1,5 @@
 package com.example;
 
-import com.datastax.oss.driver.api.core.metadata.Node;
-import com.datastax.oss.driver.api.core.metadata.NodeState;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
@@ -10,7 +8,6 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collection;
 import java.util.concurrent.Executors;
 
 public class Main {
@@ -22,8 +19,7 @@ public class Main {
 
         httpServer.createContext("/clientes", new MainHandler(new MainRepository()));
         httpServer.createContext("/healthcheck", exchange -> {
-            Collection<Node> nodes = CassandraConnector.getInstance().getSession().getMetadata().getNodes().values();
-            String msg = String.format("{\"cassandra_up\":\"%s\"}", nodes.stream().anyMatch(n -> n.getState() == NodeState.UP));
+            String msg = String.format("{\"cassandra_up\":\"%s\"}", !CassandraConnector.getInstance().getCluster().isClosed());
             exchange.getResponseHeaders().add("Content-type", "application/json");
             exchange.sendResponseHeaders(200, msg.length());
             OutputStream os = exchange.getResponseBody();

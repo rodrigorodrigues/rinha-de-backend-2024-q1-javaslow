@@ -19,7 +19,7 @@ import static org.hamcrest.Matchers.notNullValue;
 class MainTest {
 
     @Container
-    private static final CassandraContainer<?> cassandraContainer = new CassandraContainer<>("cassandra:latest")
+    private static final CassandraContainer<?> cassandraContainer = new CassandraContainer<>("cassandra:2.1.20")
             .withExposedPorts(9042)
             .withInitScript("schema.cql");
 
@@ -27,7 +27,6 @@ class MainTest {
     void setup() throws Exception {
         setEnv("CASSANDRA_HOST", cassandraContainer.getHost());
         setEnv("CASSANDRA_PORT", cassandraContainer.getMappedPort(9042)+"");
-        setEnv("CASSANDRA_DC", cassandraContainer.getLocalDatacenter());
         setEnv("SERVER_PORT", "8080");
     }
 

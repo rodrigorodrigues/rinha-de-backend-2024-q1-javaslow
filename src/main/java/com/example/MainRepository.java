@@ -1,11 +1,13 @@
 package com.example;
 
-import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.*;
-import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
-import com.datastax.oss.driver.api.querybuilder.insert.RegularInsert;
+import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.Row;
+import com.datastax.driver.core.querybuilder.Insert;
 import com.example.model.Transaction;
 
+import java.sql.Date;
 import java.time.Instant;
 import java.util.AbstractMap;
 import java.util.Collections;
@@ -13,10 +15,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.datastax.oss.driver.api.querybuilder.QueryBuilder.*;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.*;
 
 public class MainRepository {
-    private final CqlSession session = CassandraConnector.getInstance().getSession();
+    private final Cluster cluster = CassandraConnector.getInstance().getCluster();
     private final Map<Integer, Integer> accounts = Map.ofEntries(
             new AbstractMap.SimpleEntry<>(1, 100000),
             new AbstractMap.SimpleEntry<>(2, 80000),
@@ -30,64 +32,66 @@ public class MainRepository {
     }
 
     public void updateBalance(Integer amount, Integer id) {
-        SimpleStatement update = update("accounts_balance")
-                .increment("total", literal(amount))
-                .whereColumn("accountId").isEqualTo(literal(id))
-                .build();
+        try (var session = cluster.connect()) {
+            var update = update("rinha", "accounts_balance")
+                    .with(incr("total", amount))
+                    .where(eq("accountId", id));
 
-        session.execute(update);
+            session.execute(update);
+        }
     }
 
     public Integer totalBalanceByAccountId(Integer id) {
-        var select = selectFrom("accounts_balance")
-                .columns("total")
-                .whereColumn("accountId").isEqualTo(literal(id))
-                .build();
-        Row row = session.execute(select).one();
-        if (row == null) {
-            return null;
+        try (var session = cluster.connect()) {
+            var select = select("total")
+                    .from("rinha", "accounts_balance")
+                    .where(eq("accountId", id));
+            Row row = session.execute(select).one();
+            if (row == null) {
+                return null;
+            }
+            return (int) row.getLong("total");
         }
-        return (int) row.getLong("total");
     }
 
     public void saveTransaction(Transaction transaction) {
-        RegularInsert insertInto = QueryBuilder.insertInto("transactions")
-                .value("accountId", bindMarker())
-                .value("type", bindMarker())
-                .value("description", bindMarker())
-                .value("date", bindMarker())
-                .value("amount", bindMarker())
-                .value("dateMillis", bindMarker());
+        try (var session = cluster.connect()) {
+            Insert insert = insertInto("rinha", "transactions")
+                    .value("accountId", bindMarker())
+                    .value("type", bindMarker())
+                    .value("description", bindMarker())
+                    .value("date", bindMarker())
+                    .value("amount", bindMarker())
+                    .value("dateMillis", bindMarker());
 
-        SimpleStatement insertStatement = insertInto.build();
+            PreparedStatement preparedStatement = session.prepare(insert);
 
-        PreparedStatement preparedStatement = session.prepare(insertStatement);
+            Instant now = Instant.now();
+            BoundStatement saveTransaction = preparedStatement.bind()
+                    .setInt("accountId", transaction.accountId())
+                    .setString("type", transaction.type())
+                    .setString("description", transaction.description())
+                    .setDate("date", Date.from(now))
+                    .setInt("amount", transaction.amount())
+                    .setLong("dateMillis", now.toEpochMilli());
 
-        Instant now = Instant.now();
-        BoundStatement saveTransaction = preparedStatement.bind()
-                .setInt("accountId", transaction.accountId())
-                .setString("type", transaction.type())
-                .setString("description", transaction.description())
-                .setInstant("date", now)
-                .setInt("amount", transaction.amount())
-                .setLong("dateMillis", now.toEpochMilli());
-
-        session.execute(saveTransaction);
+            session.execute(saveTransaction);
+        }
     }
 
     public List<Transaction> findLastTransactionsByAccountId(Integer accountId) {
-        var select = selectFrom("transactions")
-                .all()
-                .whereColumn("accountId")
-                .isEqualTo(literal(accountId))
-                .limit(10)
-                .build();
-        List<Row> all = session.execute(select).all();
-        if (all.isEmpty()) {
-            return Collections.emptyList();
+        try (var session = cluster.connect()) {
+            var select = select()
+                    .from("rinha", "transactions")
+                    .where(eq("accountId", accountId))
+                    .limit(10);
+            List<Row> all = session.execute(select).all();
+            if (all.isEmpty()) {
+                return Collections.emptyList();
+            }
+            return all.stream()
+                    .map(t -> new Transaction(t.getInt("accountId"), t.getString("type"), t.getString("description"), t.getDate("date").toInstant(), t.getInt("amount")))
+                    .collect(Collectors.toList());
         }
-        return all.stream()
-                .map(t -> new Transaction(t.getInt("accountId"), t.getString("type"), t.getString("description"), t.getInstant("date"), t.getInt("amount")))
-                .collect(Collectors.toList());
     }
 }

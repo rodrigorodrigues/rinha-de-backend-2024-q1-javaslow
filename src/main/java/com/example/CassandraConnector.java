@@ -1,34 +1,38 @@
 package com.example;
 
-import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.HostDistance;
+import com.datastax.driver.core.PoolingOptions;
 
 import java.net.InetSocketAddress;
 
 public class CassandraConnector {
     private static final CassandraConnector INSTANCE = new CassandraConnector();
-    private CqlSession session;
+    private final Cluster cluster;
 
     private CassandraConnector() {
         var cassandraHost = System.getenv("CASSANDRA_HOST");
-        var port = Integer.parseInt(System.getenv("CASSANDRA_PORT"));
-        var cassandraDc = System.getenv("CASSANDRA_DC");
-        connect(cassandraHost, port, cassandraDc);
+        var cassandraPort = Integer.parseInt(System.getenv("CASSANDRA_PORT"));
+        this.cluster = cluster(cassandraHost, cassandraPort);
     }
 
-    private void connect(String node, Integer port, String dataCenter) {
-        var builder = CqlSession.builder();
-        builder.addContactPoint(new InetSocketAddress(node, port));
-        builder.withLocalDatacenter(dataCenter);
-        builder.withKeyspace("rinha");
+    private Cluster cluster(String cassandraHost, int cassandraPort) {
+        var poolingOptions = new PoolingOptions();
+        poolingOptions.setMaxRequestsPerConnection(HostDistance.LOCAL, 32768);
+        poolingOptions.setMaxRequestsPerConnection(HostDistance.REMOTE, 2000);
 
-        session = builder.build();
+        var builder = Cluster.builder();
+        builder.addContactPointsWithPorts(new InetSocketAddress(cassandraHost, cassandraPort));
+        builder.withPoolingOptions(poolingOptions);
+
+        return builder.build();
     }
 
     public static CassandraConnector getInstance() {
         return INSTANCE;
     }
 
-    public CqlSession getSession() {
-        return this.session;
+    public Cluster getCluster() {
+        return this.cluster;
     }
 }
