@@ -1,13 +1,10 @@
 package com.example;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 
 public class CassandraConnector {
-    private static final Logger log = LoggerFactory.getLogger(CassandraConnector.class.getName());
     private static final CassandraConnector INSTANCE = new CassandraConnector();
     private CqlSession session;
 
@@ -19,9 +16,6 @@ public class CassandraConnector {
     }
 
     private void connect(String node, Integer port, String dataCenter) {
-        log.info(String.format("Cassandra node: %s", node));
-        log.info(String.format("Cassandra port: %s", port));
-        log.info(String.format("Cassandra dataCenter: %s", dataCenter));
         var builder = CqlSession.builder();
         builder.addContactPoint(new InetSocketAddress(node, port));
         builder.withLocalDatacenter(dataCenter);

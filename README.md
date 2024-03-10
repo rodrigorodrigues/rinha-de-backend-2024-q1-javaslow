@@ -2,7 +2,7 @@
 
 ### Stack
 
-* Java 21 no ** MVC Framework**
+* Java 21 without **Framework**
 * GraalVM
 * Cassandra
 

@@ -15,7 +15,7 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: "60MB"
+          memory: "65MB"
 
   api02:
     <<: *api
@@ -28,38 +28,25 @@ services:
       - ENABLE_VIRTUAL_THREADS=true
 
   cassandra:
-    image: 'cassandra:3.11.16'#2.1.20
+    image: 'cassandra:4.0.12'
     container_name: rinha_cassandra
     environment:
-      - 'HEAP_NEWSIZE=128M'
-      - 'MAX_HEAP_SIZE=400M'
+      - HEAP_NEWSIZE=100M
+      - MAX_HEAP_SIZE=400M
     volumes:
       - ./db-init.sh:/db-init.sh
       - ./src/main/resources/schema.cql:/tmp/schema.cql
+      - ./cassandra.yaml:/etc/cassandra/cassandra.yaml
     command: "sh /db-init.sh"
     healthcheck:
       test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
     ports:
       - '9042:9042'
-    deploy:
-      resources:
-        limits:
-          cpus: "0.4"
-          memory: "400MB"
-
-  haproxy:
-    image: haproxy
-    container_name: haproxy
-    ports:
-      - "9999:9999"
-    volumes:
-      - ./haproxy:/haproxy-override
-      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-    deploy:
-      resources:
-        limits:
-          cpus: "0.1"
-          memory: "20MB"
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: "0.4"
+#          memory: "400MB"
 
   nginx:
     image: nginx:latest
@@ -74,8 +61,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.2"
-          memory: "30MB"
+          cpus: "0.1"
+          memory: "20MB"
 
 networks:
   default:
