@@ -8,7 +8,6 @@ services:
       - CASSANDRA_PORT=9042
       - CASSANDRA_HOST=cassandra
       - CASSANDRA_DC=datacenter1
-      - ENABLE_VIRTUAL_THREADS=true
     depends_on:
       - cassandra
     deploy:
@@ -20,12 +19,6 @@ services:
   api02:
     <<: *api
     container_name: rinha_backend_2
-    environment:
-      - SERVER_PORT=8081
-      - CASSANDRA_PORT=9042
-      - CASSANDRA_HOST=cassandra
-      - CASSANDRA_DC=datacenter1
-      - ENABLE_VIRTUAL_THREADS=true
 
   cassandra:
     image: 'cassandra:4.0.12'
@@ -42,11 +35,11 @@ services:
       test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
     ports:
       - '9042:9042'
-#    deploy:
-#      resources:
-#        limits:
-#          cpus: "0.4"
-#          memory: "400MB"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.4"
+          memory: "400MB"
 
   nginx:
     image: nginx:latest
