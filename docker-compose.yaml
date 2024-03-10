@@ -1,7 +1,7 @@
 version: '3.5'
 services:
   api01: &api
-    image: rinha-de-backend-2024-q1-javaslow
+    image: fielcapao/rinha-de-backend-2024-q1-javaslow-optimized:latest
     container_name: rinha_backend_1
     environment:
       - SERVER_PORT=8080
@@ -36,7 +36,6 @@ services:
     volumes:
       - ./db-init.sh:/db-init.sh
       - ./src/main/resources/schema.cql:/tmp/schema.cql
-#      - ./cassandra.yaml:/etc/cassandra/cassandra.yaml
     command: "sh /db-init.sh"
     healthcheck:
       test: ["CMD-SHELL", "[ $$(nodetool statusgossip) = running ]"]
